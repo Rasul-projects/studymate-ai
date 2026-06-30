@@ -137,6 +137,13 @@
     background:var(--lamp); color:var(--ink); border:none; padding:0 18px;
     border-radius:6px; font-weight:700; cursor:pointer;
   }
+  .msg.bot.typing{display:flex; gap:5px; align-items:center; padding:13px 16px;}
+  .msg.bot.typing span{width:6px; height:6px; border-radius:50%; background:rgba(246,241,231,0.6); animation:blink 1.2s infinite ease-in-out;}
+  .msg.bot.typing span:nth-child(2){animation-delay:.2s;}
+  .msg.bot.typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:0.3;} 40%{opacity:1;}}
+  .chat-status{font-family:var(--mono); font-size:0.7rem; padding:6px 20px 0; color:rgba(246,241,231,0.5);}
+
   .chat-suggestions{display:flex; flex-direction:column; gap:14px;}
   .suggestion-card{
     border:1px solid var(--line); padding:16px 18px; border-radius:6px; cursor:pointer;
@@ -234,6 +241,7 @@
       <div class="chat-body" id="chatBody">
         <div class="msg bot">Hey! I'm your study assistant. Ask me about a topic, or try one of the suggestions on the right →</div>
       </div>
+      <div class="chat-status" id="chatStatus">Connecting to AI…</div>
       <div class="chat-input">
         <input id="chatInput" type="text" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')sendMessage()">
         <button onclick="sendMessage()">Send</button>
@@ -329,17 +337,22 @@
 </footer>
 
 <script>
-  /* ===================== CHAT DEMO ===================== */
+  /* ===================== CHAT (Gemini via /api/chat) ===================== */
   const chatBody = document.getElementById('chatBody');
   const chatInput = document.getElementById('chatInput');
+  const chatStatus = document.getElementById('chatStatus');
+  let chatHistory = [];     // {role:'user'|'bot', text:''}
+  let apiAvailable = null;  // null = unknown, true/false once checked
 
-  function getBotReply(text){
+  // Local fallback so the demo still works if /api/chat isn't deployed
+  // (e.g. when opened straight from GitHub Pages without the Vercel backend).
+  function getFallbackReply(text){
     const t = text.toLowerCase();
-    if(t.includes('newton')) return "Newton's Second Law states that Force = mass × acceleration (F = ma). The acceleration of an object depends on the net force acting on it and its mass.";
-    if(t.includes('binary search tree') || t.includes('bst')) return "A Binary Search Tree is a tree data structure where each node's left child holds a smaller value and the right child holds a larger value — this lets you search, insert, and delete in O(log n) on average.";
-    if(t.includes('revision') || t.includes('schedule')) return "Here's a simple 7-day plan: Days 1-2 cover new material, Days 3-4 practice problems, Day 5 review weak areas, Day 6 take a mock test, Day 7 light revision + rest.";
-    if(t.includes('photosynthesis')) return "Photosynthesis is the process plants use to convert sunlight, water, and CO2 into glucose and oxygen, mainly happening in the chloroplasts of plant cells.";
-    return "Good question! In the full build, this would call your connected AI API to generate a real answer. For now, try one of the suggested topics on the right.";
+    if(t.includes('newton')) return "Newton's Second Law states that Force = mass × acceleration (F = ma). The net force on an object determines how fast it accelerates.";
+    if(t.includes('binary search tree') || t.includes('bst')) return "A Binary Search Tree keeps every left child smaller and every right child larger than its parent — that ordering lets you search, insert, and delete in O(log n) on average.";
+    if(t.includes('revision') || t.includes('schedule')) return "Try this: Days 1-2 learn new material, Days 3-4 practice problems, Day 5 review weak spots, Day 6 take a mock test, Day 7 light revision + rest.";
+    if(t.includes('photosynthesis')) return "Photosynthesis converts sunlight, water, and CO2 into glucose and oxygen, mostly inside the chloroplasts of plant cells.";
+    return "I'm running on a local fallback right now (no live API connected). Connect a Gemini key via /api/chat to get real, open-ended answers — see the README.";
   }
 
   function appendMsg(text, who){
@@ -348,20 +361,81 @@
     div.textContent = text;
     chatBody.appendChild(div);
     chatBody.scrollTop = chatBody.scrollHeight;
+    return div;
+  }
+
+  function showTyping(){
+    const div = document.createElement('div');
+    div.className = 'msg bot typing';
+    div.id = 'typingIndicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  function hideTyping(){
+    const el = document.getElementById('typingIndicator');
+    if(el) el.remove();
+  }
+
+  async function getBotReply(text){
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ message: text, history: chatHistory })
+      });
+      if(!res.ok) throw new Error('API not OK');
+      const data = await res.json();
+      apiAvailable = true;
+      return data.reply;
+    }catch(err){
+      apiAvailable = false;
+      return getFallbackReply(text);
+    }
+  }
+
+  async function handleUserText(text){
+    appendMsg(text, 'user');
+    chatHistory.push({role:'user', text});
+    chatInput.value = '';
+    showTyping();
+    const reply = await getBotReply(text);
+    hideTyping();
+    appendMsg(reply, 'bot');
+    chatHistory.push({role:'bot', text:reply});
+    updateChatStatus();
   }
 
   function sendMessage(){
     const text = chatInput.value.trim();
     if(!text) return;
-    appendMsg(text, 'user');
-    chatInput.value = '';
-    setTimeout(()=> appendMsg(getBotReply(text), 'bot'), 450);
+    handleUserText(text);
   }
 
   function askSuggestion(text){
-    appendMsg(text, 'user');
-    setTimeout(()=> appendMsg(getBotReply(text), 'bot'), 450);
+    handleUserText(text);
   }
+
+  function updateChatStatus(){
+    chatStatus.textContent = apiAvailable
+      ? 'Connected to Gemini'
+      : 'Local fallback mode — connect /api/chat for live AI answers';
+  }
+
+  // Quick silent check on load so the status line is accurate immediately
+  (async function checkApi(){
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ message: 'ping' })
+      });
+      apiAvailable = res.ok;
+    }catch(e){
+      apiAvailable = false;
+    }
+    updateChatStatus();
+  })();
 
   /* ===================== QUIZ ===================== */
   const questions = [
