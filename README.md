@@ -118,7 +118,8 @@ npm test
 
 
 ## 🚀 Live Demo
-🔗 [Add your deployed link here] — or if not deployed, the install steps above work as a fallback.
+🔗 https://rasul-projects.github.io/studymate-ai/#features
+
 
 ---
 
