@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyMate AI — Your Personal Learning Companion</title>
+<style>
+  :root{
+    --ink:#11151c;
+    --paper:#f6f1e7;
+    --lamp:#e8a33d;
+    --lamp-dim:#c9852b;
+    --indigo:#2b3a55;
+    --indigo-soft:#3d4f70;
+    --good:#5fa777;
+    --bad:#c95b4f;
+    --line:rgba(17,21,28,0.12);
+    --serif:'Iowan Old Style','Palatino Linotype',Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --mono:'SFMono-Regular',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 6vw;
+    background:rgba(246,241,231,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    font-family:var(--serif); font-weight:700; font-size:1.3rem;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lamp);box-shadow:0 0 12px var(--lamp);}
+  nav a{
+    color:var(--ink); text-decoration:none; font-size:0.92rem; margin-left:28px;
+    border-bottom:1px solid transparent; padding-bottom:2px;
+    transition:border-color .2s;
+  }
+  nav a:hover{border-color:var(--lamp);}
+  nav .links{display:flex; align-items:center;}
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    position:relative;
+    min-height:88vh;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 6vw;
+    background:
+      radial-gradient(ellipse 600px 400px at 80% 20%, rgba(232,163,61,0.18), transparent),
+      var(--paper);
+  }
+  .eyebrow{
+    font-family:var(--mono); letter-spacing:0.12em; text-transform:uppercase;
+    font-size:0.78rem; color:var(--lamp-dim); margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:''; width:28px; height:1px; background:var(--lamp-dim);}
+  h1.title{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:clamp(2.6rem, 7vw, 5.2rem);
+    line-height:1.02;
+    max-width:14ch;
+    color:var(--indigo);
+  }
+  h1.title em{font-style:italic; color:var(--lamp-dim);}
+  .hero p.lede{
+    font-size:1.15rem; max-width:46ch; margin-top:26px; color:#454c58;
+  }
+  .hero .cta-row{display:flex; gap:16px; margin-top:38px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:0.95rem;
+    padding:14px 28px; border-radius:3px; border:1px solid var(--ink);
+    cursor:pointer; text-decoration:none; display:inline-block;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{background:var(--ink); color:var(--paper);}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 6px 0 var(--lamp-dim);}
+  .btn-ghost{background:transparent; color:var(--ink);}
+  .btn-ghost:hover{background:rgba(17,21,28,0.05);}
+
+  .hero-mark{
+    position:absolute; right:6vw; top:50%; transform:translateY(-50%);
+    width:260px; height:260px; opacity:0.9;
+  }
+  @media (max-width:900px){.hero-mark{display:none;}}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:110px 6vw;}
+  .section-head{margin-bottom:56px; max-width:60ch;}
+  .section-head .num{
+    font-family:var(--mono); color:var(--lamp-dim); font-size:0.85rem; letter-spacing:0.08em;
+  }
+  .section-head h2{
+    font-family:var(--serif); font-size:clamp(1.8rem,4vw,2.6rem); margin-top:10px; color:var(--indigo);
+  }
+  .section-head p{margin-top:14px; color:#5a6070; max-width:52ch;}
+
+  /* ---------- CHAT DEMO ---------- */
+  .chat-wrap{
+    display:grid; grid-template-columns: 1fr 1.3fr; gap:48px; align-items:start;
+  }
+  @media (max-width:880px){.chat-wrap{grid-template-columns:1fr;}}
+  .chat-panel{
+    background:var(--indigo); color:var(--paper); border-radius:6px;
+    padding:0; overflow:hidden; box-shadow:0 24px 48px -20px rgba(43,58,85,0.4);
+  }
+  .chat-head{
+    padding:16px 20px; border-bottom:1px solid rgba(246,241,231,0.15);
+    display:flex; align-items:center; gap:10px; font-size:0.9rem;
+  }
+  .chat-head .glow{width:8px;height:8px;border-radius:50%;background:var(--lamp); box-shadow:0 0 8px var(--lamp);}
+  .chat-body{height:360px; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px;}
+  .msg{max-width:80%; padding:10px 14px; border-radius:10px; font-size:0.92rem; line-height:1.45;}
+  .msg.bot{background:rgba(246,241,231,0.1); align-self:flex-start; border:1px solid rgba(246,241,231,0.15);}
+  .msg.user{background:var(--lamp); color:var(--ink); align-self:flex-end; font-weight:500;}
+  .chat-input{display:flex; gap:8px; padding:16px 20px; border-top:1px solid rgba(246,241,231,0.15);}
+  .chat-input input{
+    flex:1; background:rgba(246,241,231,0.08); border:1px solid rgba(246,241,231,0.2);
+    color:var(--paper); padding:11px 14px; border-radius:6px; font-size:0.92rem; outline:none;
+  }
+  .chat-input input::placeholder{color:rgba(246,241,231,0.5);}
+  .chat-input button{
+    background:var(--lamp); color:var(--ink); border:none; padding:0 18px;
+    border-radius:6px; font-weight:700; cursor:pointer;
+  }
+  .chat-suggestions{display:flex; flex-direction:column; gap:14px;}
+  .suggestion-card{
+    border:1px solid var(--line); padding:16px 18px; border-radius:6px; cursor:pointer;
+    transition:border-color .15s, background .15s; background:#fff;
+  }
+  .suggestion-card:hover{border-color:var(--lamp-dim); background:rgba(232,163,61,0.06);}
+  .suggestion-card .label{font-family:var(--mono); font-size:0.72rem; color:var(--lamp-dim); text-transform:uppercase; letter-spacing:0.06em;}
+  .suggestion-card p{margin-top:6px; font-size:0.95rem; color:var(--ink);}
+
+  /* ---------- QUIZ ---------- */
+  .quiz-card{
+    border:1px solid var(--line); border-radius:6px; padding:36px; background:#fff;
+    max-width:680px;
+  }
+  .quiz-progress{display:flex; gap:6px; margin-bottom:28px;}
+  .quiz-progress span{height:4px; flex:1; background:var(--line); border-radius:2px; overflow:hidden;}
+  .quiz-progress span i{display:block; height:100%; background:var(--lamp); width:0%; transition:width .3s;}
+  .quiz-q{font-family:var(--serif); font-size:1.4rem; color:var(--indigo); margin-bottom:22px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:10px;}
+  .opt{
+    border:1px solid var(--line); padding:13px 16px; border-radius:6px; cursor:pointer;
+    font-size:0.95rem; transition:all .15s;
+  }
+  .opt:hover{border-color:var(--lamp-dim);}
+  .opt.correct{border-color:var(--good); background:rgba(95,167,119,0.1);}
+  .opt.wrong{border-color:var(--bad); background:rgba(201,91,79,0.1);}
+  .quiz-foot{margin-top:24px; display:flex; justify-content:space-between; align-items:center;}
+  .quiz-score{font-family:var(--mono); font-size:0.85rem; color:#5a6070;}
+
+  /* ---------- DASHBOARD ---------- */
+  .dash-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px;}
+  @media (max-width:780px){.dash-grid{grid-template-columns:1fr;}}
+  .dash-card{
+    border:1px solid var(--line); border-radius:6px; padding:26px; background:#fff;
+  }
+  .dash-card .metric{font-family:var(--serif); font-size:2.4rem; color:var(--indigo);}
+  .dash-card .label{font-family:var(--mono); font-size:0.74rem; text-transform:uppercase; letter-spacing:0.06em; color:#8a8f99; margin-top:6px;}
+  .ring-wrap{display:flex; justify-content:center; padding:10px 0;}
+
+  /* ---------- FEATURES ---------- */
+  .feat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media (max-width:780px){.feat-grid{grid-template-columns:1fr;}}
+  .feat{background:var(--paper); padding:32px;}
+  .feat .num{font-family:var(--mono); color:var(--lamp-dim); font-size:0.8rem;}
+  .feat h3{font-family:var(--serif); font-size:1.25rem; margin-top:14px; color:var(--indigo);}
+  .feat p{margin-top:10px; font-size:0.92rem; color:#5a6070;}
+
+  footer{
+    padding:60px 6vw 40px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  }
+  footer .brand{font-size:1rem;}
+  footer .meta{font-family:var(--mono); font-size:0.78rem; color:#8a8f99;}
+
+  ::selection{background:var(--lamp); color:var(--ink);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span class="dot"></span> StudyMate AI</div>
+  <div class="links">
+    <a href="#chat">Assistant</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#dashboard">Progress</a>
+    <a href="#features">Features</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">TSOC 2026 · AI/ML TRACK</div>
+  <h1 class="title">Study smarter,<br>not <em>alone</em>.</h1>
+  <p class="lede">StudyMate AI turns scattered revision into a focused routine — an AI tutor for instant doubts, adaptive quizzes that find your weak spots, and a dashboard that shows real progress.</p>
+  <div class="cta-row">
+    <a href="#chat" class="btn btn-primary">Try the assistant</a>
+    <a href="#quiz" class="btn btn-ghost">Take a sample quiz</a>
+  </div>
+  <svg class="hero-mark" viewBox="0 0 200 200" fill="none">
+    <circle cx="100" cy="100" r="80" stroke="#2b3a55" stroke-width="1" opacity="0.15"/>
+    <circle cx="100" cy="100" r="60" stroke="#e8a33d" stroke-width="1.5" stroke-dasharray="4 6"/>
+    <path d="M100 40 L100 100 L140 120" stroke="#2b3a55" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="4" fill="#e8a33d"/>
+  </svg>
+</header>
+
+<section id="chat">
+  <div class="section-head">
+    <div class="num">01 — ASSISTANT</div>
+    <h2>Ask anything, get unstuck instantly</h2>
+    <p>A rule-based demo is wired up below. In the real build, swap the <code>getBotReply()</code> function in script.js for a call to your AI provider's API.</p>
+  </div>
+  <div class="chat-wrap">
+    <div class="chat-panel">
+      <div class="chat-head"><span class="glow"></span> StudyMate Assistant — online</div>
+      <div class="chat-body" id="chatBody">
+        <div class="msg bot">Hey! I'm your study assistant. Ask me about a topic, or try one of the suggestions on the right →</div>
+      </div>
+      <div class="chat-input">
+        <input id="chatInput" type="text" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <div class="chat-suggestions">
+      <div class="suggestion-card" onclick="askSuggestion('Explain Newton\'s second law')">
+        <div class="label">Physics</div>
+        <p>Explain Newton's second law</p>
+      </div>
+      <div class="suggestion-card" onclick="askSuggestion('What is a binary search tree?')">
+        <div class="label">Computer Science</div>
+        <p>What is a binary search tree?</p>
+      </div>
+      <div class="suggestion-card" onclick="askSuggestion('Help me plan a 7-day revision schedule')">
+        <div class="label">Planning</div>
+        <p>Help me plan a 7-day revision schedule</p>
+      </div>
+      <div class="suggestion-card" onclick="askSuggestion('What is photosynthesis?')">
+        <div class="label">Biology</div>
+        <p>What is photosynthesis?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz">
+  <div class="section-head">
+    <div class="num">02 — QUIZ</div>
+    <h2>Adaptive checks that find the gaps</h2>
+    <p>Score updates live and feeds the dashboard below. Replace the <code>questions</code> array in script.js with your real question bank.</p>
+  </div>
+  <div class="quiz-card">
+    <div class="quiz-progress" id="quizProgress"></div>
+    <div class="quiz-q" id="quizQ"></div>
+    <div class="quiz-opts" id="quizOpts"></div>
+    <div class="quiz-foot">
+      <div class="quiz-score" id="quizScore">Score: 0 / 0</div>
+      <button class="btn btn-ghost" onclick="nextQuestion()">Skip →</button>
+    </div>
+  </div>
+</section>
+
+<section id="dashboard">
+  <div class="section-head">
+    <div class="num">03 — PROGRESS</div>
+    <h2>Your study dashboard</h2>
+    <p>Stored locally in your browser so the demo persists between visits — no backend required to try it.</p>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="metric" id="statAttempted">0</div>
+      <div class="label">Questions attempted</div>
+    </div>
+    <div class="dash-card">
+      <div class="metric" id="statAccuracy">0%</div>
+      <div class="label">Accuracy</div>
+    </div>
+    <div class="dash-card">
+      <div class="ring-wrap"><div id="ring"></div></div>
+      <div class="label" style="text-align:center;">Weekly goal progress</div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section-head">
+    <div class="num">04 — FEATURES</div>
+    <h2>What's under the hood</h2>
+  </div>
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="num">01</div>
+      <h3>AI Chat Tutor</h3>
+      <p>Instant, conversational answers to doubts — connect any LLM API for production use.</p>
+    </div>
+    <div class="feat">
+      <div class="num">02</div>
+      <h3>Adaptive Quizzes</h3>
+      <p>Auto-generated checks that highlight weak topics based on past performance.</p>
+    </div>
+    <div class="feat">
+      <div class="num">03</div>
+      <h3>Progress Tracking</h3>
+      <p>A live dashboard turning quiz history into a clear picture of growth over time.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="brand"><span class="dot"></span> StudyMate AI</div>
+  <div class="meta">Built for Technoviz Summer of Code · 2026</div>
+</footer>
+
+<script>
+  /* ===================== CHAT DEMO ===================== */
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+
+  function getBotReply(text){
+    const t = text.toLowerCase();
+    if(t.includes('newton')) return "Newton's Second Law states that Force = mass × acceleration (F = ma). The acceleration of an object depends on the net force acting on it and its mass.";
+    if(t.includes('binary search tree') || t.includes('bst')) return "A Binary Search Tree is a tree data structure where each node's left child holds a smaller value and the right child holds a larger value — this lets you search, insert, and delete in O(log n) on average.";
+    if(t.includes('revision') || t.includes('schedule')) return "Here's a simple 7-day plan: Days 1-2 cover new material, Days 3-4 practice problems, Day 5 review weak areas, Day 6 take a mock test, Day 7 light revision + rest.";
+    if(t.includes('photosynthesis')) return "Photosynthesis is the process plants use to convert sunlight, water, and CO2 into glucose and oxygen, mainly happening in the chloroplasts of plant cells.";
+    return "Good question! In the full build, this would call your connected AI API to generate a real answer. For now, try one of the suggested topics on the right.";
+  }
+
+  function appendMsg(text, who){
+    const div = document.createElement('div');
+    div.className = 'msg ' + who;
+    div.textContent = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function sendMessage(){
+    const text = chatInput.value.trim();
+    if(!text) return;
+    appendMsg(text, 'user');
+    chatInput.value = '';
+    setTimeout(()=> appendMsg(getBotReply(text), 'bot'), 450);
+  }
+
+  function askSuggestion(text){
+    appendMsg(text, 'user');
+    setTimeout(()=> appendMsg(getBotReply(text), 'bot'), 450);
+  }
+
+  /* ===================== QUIZ ===================== */
+  const questions = [
+    {q:"What does CPU stand for?", opts:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Core Processing Unison"], correct:0},
+    {q:"Which gas do plants absorb for photosynthesis?", opts:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], correct:2},
+    {q:"What is the time complexity of binary search?", opts:["O(n)","O(n^2)","O(log n)","O(1)"], correct:2},
+    {q:"Newton's First Law is also known as the Law of:", opts:["Gravity","Inertia","Motion","Energy"], correct:1},
+    {q:"Which data structure uses FIFO order?", opts:["Stack","Queue","Tree","Graph"], correct:1}
+  ];
+
+  let qIndex = 0;
+  let score = 0;
+  let attempted = 0;
+  let answered = false;
+
+  function loadStats(){
+    const saved = JSON.parse(localStorage.getItem('studymate_stats') || '{}');
+    return { attempted: saved.attempted || 0, score: saved.score || 0 };
+  }
+  function saveStats(){
+    localStorage.setItem('studymate_stats', JSON.stringify({attempted, score}));
+  }
+
+  function renderProgress(){
+    const bar = document.getElementById('quizProgress');
+    bar.innerHTML = '';
+    questions.forEach((_, i)=>{
+      const span = document.createElement('span');
+      const fill = document.createElement('i');
+      fill.style.width = i <= qIndex ? '100%' : '0%';
+      span.appendChild(fill);
+      bar.appendChild(span);
+    });
+  }
+
+  function renderQuestion(){
+    answered = false;
+    const cur = questions[qIndex];
+    document.getElementById('quizQ').textContent = cur.q;
+    const optsDiv = document.getElementById('quizOpts');
+    optsDiv.innerHTML = '';
+    cur.opts.forEach((opt, i)=>{
+      const div = document.createElement('div');
+      div.className = 'opt';
+      div.textContent = opt;
+      div.onclick = ()=> selectOption(i);
+      optsDiv.appendChild(div);
+    });
+    renderProgress();
+    updateScoreLabel();
+  }
+
+  function selectOption(i){
+    if(answered) return;
+    answered = true;
+    const cur = questions[qIndex];
+    const opts = document.querySelectorAll('.opt');
+    opts[cur.correct].classList.add('correct');
+    if(i !== cur.correct) opts[i].classList.add('wrong');
+    else score++;
+    attempted++;
+    saveStats();
+    updateScoreLabel();
+    renderDashboard();
+    setTimeout(nextQuestion, 900);
+  }
+
+  function nextQuestion(){
+    qIndex = (qIndex + 1) % questions.length;
+    renderQuestion();
+  }
+
+  function updateScoreLabel(){
+    document.getElementById('quizScore').textContent = `Score: ${score} / ${attempted}`;
+  }
+
+  /* ===================== DASHBOARD ===================== */
+  function renderDashboard(){
+    const stats = loadStats();
+    document.getElementById('statAttempted').textContent = stats.attempted;
+    const acc = stats.attempted ? Math.round((stats.score / stats.attempted) * 100) : 0;
+    document.getElementById('statAccuracy').textContent = acc + '%';
+    drawRing(Math.min(acc, 100));
+  }
+
+  function drawRing(pct){
+    const size = 96, stroke = 8, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+    const offset = c - (pct / 100) * c;
+    document.getElementById('ring').innerHTML = `
+      <svg width="${size}" height="${size}">
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="#e7e2d6" stroke-width="${stroke}" fill="none"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="#e8a33d" stroke-width="${stroke}" fill="none"
+          stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"
+          transform="rotate(-90 ${size/2} ${size/2})"/>
+        <text x="50%" y="50%" text-anchor="middle" dy="0.35em" font-family="Georgia, serif" font-size="20" fill="#2b3a55">${pct}%</text>
+      </svg>`;
+  }
+
+  /* ===================== INIT ===================== */
+  (function init(){
+    const stats = loadStats();
+    attempted = stats.attempted;
+    score = stats.score;
+    renderQuestion();
+    renderDashboard();
+  })();
+</script>
+
+</body>
+</html>
