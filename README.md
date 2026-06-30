@@ -1,4 +1,3 @@
-# studymate-ai
 # StudyMate AI 🎓🤖
 ### AI-Powered Personalized Learning Assistant — Built for Technoviz Summer of Code (TSOC) 2026
 
