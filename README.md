@@ -118,7 +118,7 @@ npm test
 
 
 ## 🚀 Live Demo
-🔗 https://rasul-projects.github.io/studymate-ai/#features
+🔗 https://rasul-projects.github.io/studymate-ai/
 🔗 https://studymate-ai-wine.vercel.app/
 
 
